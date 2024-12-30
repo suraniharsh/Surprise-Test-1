@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapSort</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/SnapSort.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">SnapSort Gallery</h1>
+        
+        <div class="flex flex-wrap justify-center gap-4 mb-8" role="group" aria-label="Filter categories">
+            <button class="filter-btn active px-4 py-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-category="all">
+                All
+            </button>
+            <button class="filter-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-category="nature">
+                Nature
+            </button>
+            <button class="filter-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-category="architecture">
+                Architecture
+            </button>
+            <button class="filter-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-category="food">
+                Food
+            </button>
+        </div>
+
+        <div id="loading" class="hidden flex justify-center items-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+        </div>
+
+        <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 opacity-100 transition-opacity duration-300">
+        </div>
+    </div>
+</body>
+</html> 
