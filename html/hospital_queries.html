@@ -2,12 +2,142 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hospital Database Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../js/hospital_data.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Enhanced Mobile Styles */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+
+            .query-sidebar {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 50;
+                background: white;
+                border-top: 1px solid #e5e7eb;
+                border-radius: 1.5rem 1.5rem 0 0;
+                box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+                transform: translateY(90%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                height: 90vh;
+                padding: 1rem;
+            }
+
+            .query-sidebar.active {
+                transform: translateY(0);
+            }
+
+            .query-toggle-btn {
+                display: flex !important;
+                position: fixed;
+                bottom: 1rem;
+                right: 1rem;
+                z-index: 51;
+                padding: 0.75rem;
+                border-radius: 9999px;
+                background: #3b82f6;
+                color: white;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+
+            .query-item {
+                padding: 1rem !important;
+                margin-bottom: 0.5rem !important;
+                border-radius: 0.75rem !important;
+            }
+
+            .query-item:active {
+                background-color: #eff6ff;
+            }
+
+            .results-container {
+                margin-top: 1rem !important;
+                padding: 1rem !important;
+            }
+
+            .btn-effect {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.875rem !important;
+            }
+
+            .btn-effect:active {
+                transform: scale(0.98);
+            }
+
+            .modal-content {
+                width: 90% !important;
+                max-height: 80vh !important;
+                margin: 2rem auto !important;
+            }
+
+            .toast {
+                width: 90% !important;
+                margin: 0 auto 1rem auto !important;
+            }
+        }
+
+        /* Drag handle for mobile */
+        .drag-handle {
+            width: 40px;
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 2px;
+            margin: 0 auto 1rem auto;
+        }
+
+        /* Touch-friendly buttons */
+        .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Prevent text selection on mobile */
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
         /* Base styles */
         body {
             font-family: 'Inter', sans-serif;
@@ -295,216 +425,126 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-gray-50 to-purple-50 min-h-screen">
-    <!-- Navigation -->
-    <nav class="glass-effect text-gray-800 shadow-lg sticky top-0 z-50 border-b border-gray-200">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <!-- Logo and Title -->
-                <div class="flex items-center space-x-4">
-                    <div class="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg">
-                        <h1 class="text-2xl font-bold text-white">🏥</h1>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-                            Hospital DB Dashboard
-                        </h1>
-                        <p class="text-sm text-gray-500">MongoDB Query Explorer</p>
-                    </div>
-                </div>
+<body class="bg-gray-50">
+    <!-- Mobile Query Toggle Button -->
+    <button class="query-toggle-btn hidden" onclick="toggleQuerySidebar()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+    </button>
 
-                <!-- Search Bar -->
-                <div class="relative w-full md:w-auto">
-                    <input type="text" 
-                        id="querySearch" 
-                        placeholder="Search queries..." 
-                        class="search-input w-full md:w-64 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none"
-                        onkeyup="filterQueries(this.value)">
-                    <span class="absolute right-3 top-2.5 text-gray-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </span>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex space-x-4">
-                    <button onclick="resetData()" class="btn-effect bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg flex items-center shadow-sm">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        Reset Data
-                    </button>
-                    <button onclick="toggleDataView()" class="btn-effect bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg flex items-center shadow-sm">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                        </svg>
-                        View Raw Data
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Dashboard Grid -->
     <div class="container mx-auto px-4 py-8">
-        <div class="dashboard-grid grid grid-cols-12 gap-6">
-            <!-- Left Sidebar - Query List -->
-            <div class="col-span-12 md:col-span-3 space-y-4 animate-slide-in">
-                <!-- Query Types Tabs -->
-                <div class="glass-effect rounded-xl shadow-sm p-4">
-                    <div class="flex space-x-2 bg-gray-100 p-1 rounded-lg">
-                        <button onclick="showQueryType('find')" class="flex-1 py-2 px-4 rounded-lg focus:outline-none query-type-btn active transition-all duration-300" data-type="find">
-                            <span class="flex items-center justify-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                                Find
-                            </span>
-                        </button>
-                        <button onclick="showQueryType('update')" class="flex-1 py-2 px-4 rounded-lg focus:outline-none query-type-btn transition-all duration-300" data-type="update">
-                            <span class="flex items-center justify-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                                Update
-                            </span>
-                        </button>
-                        <button onclick="showQueryType('delete')" class="flex-1 py-2 px-4 rounded-lg focus:outline-none query-type-btn transition-all duration-300" data-type="delete">
-                            <span class="flex items-center justify-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                                Delete
-                            </span>
-                        </button>
-                    </div>
+        <div class="dashboard-grid grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Query Sidebar -->
+            <div class="query-sidebar lg:col-span-3 bg-white p-4 rounded-xl shadow-sm">
+                <div class="drag-handle lg:hidden"></div>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800">Available Queries</h2>
+                    <button class="lg:hidden p-2 hover:bg-gray-100 rounded-lg" onclick="toggleQuerySidebar()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
-
-                <!-- Query List -->
-                <div class="glass-effect rounded-xl shadow-sm overflow-hidden">
-                    <div class="p-4 bg-gray-50/80 border-b border-gray-200">
-                        <h2 class="font-semibold text-gray-700 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                            Available Queries
-                        </h2>
-                    </div>
-                    <div class="divide-y divide-gray-100 max-h-[calc(100vh-250px)] overflow-y-auto" id="queryList">
-                        <!-- Query items will be inserted here -->
-                    </div>
+                
+                <div class="space-y-2 overflow-y-auto max-h-[calc(100vh-12rem)]">
+                    <!-- Query items will be dynamically added here -->
                 </div>
             </div>
 
-            <!-- Main Content Area -->
-            <div class="col-span-12 md:col-span-9 space-y-6 animate-slide-in" style="animation-delay: 0.1s">
-                <!-- Current Query Display -->
-                <div class="glass-effect rounded-xl shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center" id="currentQueryTitle">
-                        <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        Select a Query
-                    </h2>
-                    <div class="bg-gray-50/80 rounded-lg p-4 mb-4">
-                        <h3 class="text-sm font-semibold text-gray-600 mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                            </svg>
-                            MongoDB Query:
-                        </h3>
-                        <pre id="currentQuerySyntax" class="syntax-highlight text-sm bg-white p-4 rounded-lg border border-gray-200 shadow-sm"></pre>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <p class="text-gray-600 text-sm" id="currentQueryDescription"></p>
-                        <button onclick="executeCurrentQuery()" id="executeBtn" class="btn-effect bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg transition-all duration-300 hidden shadow-sm group">
-                            <span class="flex items-center">
-                                <svg class="w-4 h-4 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                Execute Query
-                            </span>
+            <!-- Main Content -->
+            <div class="lg:col-span-9 space-y-6">
+                <!-- Current Query Section -->
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Current Query</h2>
+                    <div id="currentQuery" class="bg-gray-50 p-4 rounded-lg font-mono text-sm"></div>
+                    
+                    <div class="flex flex-wrap gap-4 mt-6">
+                        <button onclick="executeCurrentQuery()" class="btn-effect touch-target bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            Execute Query
+                        </button>
+                        <button onclick="resetData()" class="btn-effect touch-target bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            Reset Data
+                        </button>
+                        <button onclick="toggleDataView()" class="btn-effect touch-target bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                            View Raw Data
                         </button>
                     </div>
                 </div>
 
-                <!-- Query Results -->
-                <div class="glass-effect rounded-xl shadow-sm p-6 results-container">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold flex items-center">
-                            <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                            Query Results
-                        </h2>
-                        <span id="resultCount" class="text-sm text-gray-500 bg-gray-100/80 px-3 py-1 rounded-full flex items-center">
-                            <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
-                            </svg>
-                            <span></span>
-                        </span>
+                <!-- Results Section -->
+                <div class="results-container bg-white p-6 rounded-xl shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">Query Results</h2>
+                        <span id="resultCount" class="text-sm text-gray-500"></span>
                     </div>
-                    <div class="bg-gray-50/80 rounded-lg p-4 max-h-[calc(100vh-500px)] overflow-auto">
-                        <pre id="queryResult" class="text-sm syntax-highlight"></pre>
-                    </div>
+                    <div id="queryResults" class="bg-gray-50 p-4 rounded-lg overflow-x-auto"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Raw Data Modal -->
-    <div id="dataModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 animate-fade-in backdrop-blur-sm">
-        <div class="modal-content absolute inset-4 md:inset-10 glass-effect rounded-xl shadow-xl flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                    </svg>
-                    Database Collections
-                </h2>
-                <button onclick="toggleDataView()" class="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+    <div id="rawDataModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="modal-content bg-white rounded-xl mx-auto my-8 p-6 max-w-4xl max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Raw Database Data</h3>
+                <button onclick="toggleDataView()" class="p-2 hover:bg-gray-100 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
-            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 p-6 overflow-auto">
-                <div class="space-y-4">
-                    <h3 class="font-semibold flex items-center">
-                        <span class="mr-2">👤</span> Patients Collection
-                    </h3>
-                    <pre id="patientsData" class="bg-gray-50/80 p-4 rounded-lg text-sm overflow-auto max-h-[calc(100vh-200px)] border border-gray-200 syntax-highlight"></pre>
-                </div>
-                <div class="space-y-4">
-                    <h3 class="font-semibold flex items-center">
-                        <span class="mr-2">👨‍⚕️</span> Doctors Collection
-                    </h3>
-                    <pre id="doctorsData" class="bg-gray-50/80 p-4 rounded-lg text-sm overflow-auto max-h-[calc(100vh-200px)] border border-gray-200 syntax-highlight"></pre>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="hidden fixed bottom-4 right-4 glass-effect px-6 py-3 rounded-lg shadow-lg toast">
-        <div class="flex items-center">
-            <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span id="toastMessage" class="text-gray-800"></span>
+            <div id="rawData" class="bg-gray-50 p-4 rounded-lg font-mono text-sm overflow-x-auto"></div>
         </div>
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white p-4 rounded-xl flex items-center space-x-4">
             <div class="loading-spinner"></div>
-            <span class="text-gray-800">Executing query...</span>
+            <span class="text-gray-800">Processing Query...</span>
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 hidden">
+        <div class="toast glass-effect px-4 py-3 rounded-lg text-sm font-medium shadow-lg"></div>
+    </div>
+
     <script>
+        // Mobile Query Sidebar Toggle
+        function toggleQuerySidebar() {
+            const sidebar = document.querySelector('.query-sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            const sidebar = document.querySelector('.query-sidebar');
+            const toggleBtn = document.querySelector('.query-toggle-btn');
+            if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target) && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Add touch event handlers for the drag handle
+        let touchStartY = 0;
+        let touchEndY = 0;
+        const dragHandle = document.querySelector('.drag-handle');
+        
+        dragHandle.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        });
+
+        dragHandle.addEventListener('touchmove', (e) => {
+            touchEndY = e.touches[0].clientY;
+            const sidebar = document.querySelector('.query-sidebar');
+            if (touchEndY - touchStartY > 50) {
+                sidebar.classList.remove('active');
+            }
+        });
+
         // Initialize data
         let currentData = {
             patients: [],
