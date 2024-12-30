@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Database Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/hospital_data.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Enhanced Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .animate-scale-in {
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        .animate-pulse-once {
+            animation: pulse 0.4s ease-out;
+        }
+
+        /* Enhanced Card hover effects */
+        .query-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .query-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.05), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .query-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .query-item:hover::after {
+            transform: translateX(100%);
+        }
+
+        .query-item.selected {
+            background-color: #eff6ff;
+            border-left-color: #3b82f6;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+        }
+
+        .query-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: #3b82f6;
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .query-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        /* Enhanced Button effects */
+        .btn-effect {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-effect::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: transform 0.6s ease, opacity 0.4s ease;
+        }
+
+        .btn-effect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-effect:hover::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .btn-effect:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Enhanced Modal animation */
+        .modal-content {
+            animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from { 
+                transform: translateY(-20px) scale(0.98); 
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0) scale(1); 
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced Toast notification */
+        .toast {
+            animation: toastSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+        }
+
+        @keyframes toastSlideIn {
+            from { 
+                transform: translateY(100%) scale(0.95); 
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0) scale(1); 
+                opacity: 1;
+            }
+        }
+
+        /* Glass morphism effects */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Loading animation */
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .query-item:hover {
+                transform: none;
+            }
+            .btn-effect:hover {
+                transform: none;
+            }
+        }
+
+        /* Code syntax highlighting */
+        .syntax-highlight {
+            color: #374151;
+        }
+        .syntax-highlight .keyword { color: #7C3AED; }
+        .syntax-highlight .string { color: #059669; }
+        .syntax-highlight .number { color: #2563EB; }
+        .syntax-highlight .operator { color: #DC2626; }
+
+        /* Add ripple animation style */
+        .ripple-effect {
+            animation: ripple 0.6s linear;
+            position: absolute;
+            transform: scale(0);
+            opacity: 0.4;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Query Categories */
+        .category-badge {
+            @apply px-2 py-1 text-xs rounded-full;
+        }
+        .category-find {
+            @apply bg-blue-100 text-blue-700;
+        }
+        .category-update {
+            @apply bg-green-100 text-green-700;
+        }
+        .category-delete {
+            @apply bg-red-100 text-red-700;
+        }
+
+        /* Search bar animation */
+        .search-input {
+            @apply transition-all duration-300;
+        }
+        .search-input:focus {
+            @apply ring-2 ring-blue-300 shadow-lg;
+        }
+
+        /* Query item enhancements */
+        .query-item {
+            @apply transition-all duration-300 border-l-4 border-transparent;
+        }
+        .query-item:hover .query-actions {
+            @apply opacity-100;
+        }
+        .query-actions {
+            @apply opacity-0 transition-opacity duration-200;
+        }
+
+        /* Results animation */
+        .results-container {
+            @apply transition-all duration-300;
+        }
+        .results-container.loading {
+            @apply opacity-50 pointer-events-none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-gray-50 to-purple-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-effect text-gray-800 shadow-lg sticky top-0 z-50 border-b border-gray-200">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Logo and Title -->
+                <div class="flex items-center space-x-4">
+                    <div class="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg">
+                        <h1 class="text-2xl font-bold text-white">🏥</h1>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+                            Hospital DB Dashboard
+                        </h1>
+                        <p class="text-sm text-gray-500">MongoDB Query Explorer</p>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="relative w-full md:w-auto">
+                    <input type="text" 
+                        id="querySearch" 
+                        placeholder="Search queries..." 
+                        class="search-input w-full md:w-64 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none"
+                        onkeyup="filterQueries(this.value)">
+                    <span class="absolute right-3 top-2.5 text-gray-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-4">
+                    <button onclick="resetData()" class="btn-effect bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg flex items-center shadow-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Reset Data
+                    </button>
+                    <button onclick="toggleDataView()" class="btn-effect bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg flex items-center shadow-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                        </svg>
+                        View Raw Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Grid -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="dashboard-grid grid grid-cols-12 gap-6">
+            <!-- Left Sidebar - Query List -->
+            <div class="col-span-12 md:col-span-3 space-y-4 animate-slide-in">
+                <!-- Query Types Tabs -->
+                <div class="glass-effect rounded-xl shadow-sm p-4">
+                    <div class="flex space-x-2 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="showQueryType('find')" class="flex-1 py-2 px-4 rounded-lg focus:outline-none query-type-btn active transition-all duration-300" data-type="find">
+                            <span class="flex items-center justify-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                Find
+                            </span>
+                        </button>
+                        <button onclick="showQueryType('update')" class="flex-1 py-2 px-4 rounded-lg focus:outline-none query-type-btn transition-all duration-300" data-type="update">
+                            <span class="flex items-center justify-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Update
+                            </span>
+                        </button>
+                        <button onclick="showQueryType('delete')" class="flex-1 py-2 px-4 rounded-lg focus:outline-none query-type-btn transition-all duration-300" data-type="delete">
+                            <span class="flex items-center justify-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                Delete
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Query List -->
+                <div class="glass-effect rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-4 bg-gray-50/80 border-b border-gray-200">
+                        <h2 class="font-semibold text-gray-700 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            Available Queries
+                        </h2>
+                    </div>
+                    <div class="divide-y divide-gray-100 max-h-[calc(100vh-250px)] overflow-y-auto" id="queryList">
+                        <!-- Query items will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-span-12 md:col-span-9 space-y-6 animate-slide-in" style="animation-delay: 0.1s">
+                <!-- Current Query Display -->
+                <div class="glass-effect rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center" id="currentQueryTitle">
+                        <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Select a Query
+                    </h2>
+                    <div class="bg-gray-50/80 rounded-lg p-4 mb-4">
+                        <h3 class="text-sm font-semibold text-gray-600 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                            </svg>
+                            MongoDB Query:
+                        </h3>
+                        <pre id="currentQuerySyntax" class="syntax-highlight text-sm bg-white p-4 rounded-lg border border-gray-200 shadow-sm"></pre>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <p class="text-gray-600 text-sm" id="currentQueryDescription"></p>
+                        <button onclick="executeCurrentQuery()" id="executeBtn" class="btn-effect bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg transition-all duration-300 hidden shadow-sm group">
+                            <span class="flex items-center">
+                                <svg class="w-4 h-4 mr-2 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Execute Query
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Query Results -->
+                <div class="glass-effect rounded-xl shadow-sm p-6 results-container">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold flex items-center">
+                            <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            Query Results
+                        </h2>
+                        <span id="resultCount" class="text-sm text-gray-500 bg-gray-100/80 px-3 py-1 rounded-full flex items-center">
+                            <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                            </svg>
+                            <span></span>
+                        </span>
+                    </div>
+                    <div class="bg-gray-50/80 rounded-lg p-4 max-h-[calc(100vh-500px)] overflow-auto">
+                        <pre id="queryResult" class="text-sm syntax-highlight"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Data Modal -->
+    <div id="dataModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 animate-fade-in backdrop-blur-sm">
+        <div class="modal-content absolute inset-4 md:inset-10 glass-effect rounded-xl shadow-xl flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                    </svg>
+                    Database Collections
+                </h2>
+                <button onclick="toggleDataView()" class="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 p-6 overflow-auto">
+                <div class="space-y-4">
+                    <h3 class="font-semibold flex items-center">
+                        <span class="mr-2">👤</span> Patients Collection
+                    </h3>
+                    <pre id="patientsData" class="bg-gray-50/80 p-4 rounded-lg text-sm overflow-auto max-h-[calc(100vh-200px)] border border-gray-200 syntax-highlight"></pre>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="font-semibold flex items-center">
+                        <span class="mr-2">👨‍⚕️</span> Doctors Collection
+                    </h3>
+                    <pre id="doctorsData" class="bg-gray-50/80 p-4 rounded-lg text-sm overflow-auto max-h-[calc(100vh-200px)] border border-gray-200 syntax-highlight"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 glass-effect px-6 py-3 rounded-lg shadow-lg toast">
+        <div class="flex items-center">
+            <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span id="toastMessage" class="text-gray-800"></span>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
+            <div class="loading-spinner"></div>
+            <span class="text-gray-800">Executing query...</span>
+        </div>
+    </div>
+
+    <script>
+        // Initialize data
+        let currentData = {
+            patients: [],
+            doctors: []
+        };
+
+        let currentQuery = null;
+
+        function createQueryList() {
+            const container = document.getElementById('queryList');
+            const createQueryItem = (query) => `
+                <div class="query-item p-4 hover:bg-gray-50 cursor-pointer" onclick="selectQuery(${query.id})">
+                    <h3 class="font-medium text-gray-800">${query.title}</h3>
+                    <p class="text-sm text-gray-500 mt-1">${query.description}</p>
+                </div>
+            `;
+
+            showQueryType('find');
+        }
+
+        function showQueryType(type) {
+            const container = document.getElementById('queryList');
+            let queries;
+            
+            switch(type) {
+                case 'find':
+                    queries = HospitalDB.ALL_QUERIES;
+                    break;
+                case 'update':
+                    queries = HospitalDB.UPDATE_OPERATIONS;
+                    break;
+                case 'delete':
+                    queries = HospitalDB.DELETE_OPERATIONS;
+                    break;
+            }
+
+            container.innerHTML = queries.map(query => `
+                <div class="query-item p-4 hover:bg-gray-50 cursor-pointer relative group" onclick="selectQuery(${query.id})">
+                    <div class="absolute inset-y-0 left-0 w-1 bg-blue-500 transform scale-y-0 group-hover:scale-y-100 transition-transform duration-200"></div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-medium text-gray-800">${query.title}</h3>
+                                <span class="category-badge ${getCategoryClass(query.id)}">${getQueryCategory(query.id)}</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">${query.description}</p>
+                        </div>
+                        <div class="query-actions flex items-center gap-2">
+                            <button class="p-1 hover:bg-gray-100 rounded" onclick="copyQuery(event, ${query.id})" title="Copy Query">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                            <button class="p-1 hover:bg-gray-100 rounded" onclick="showQueryInfo(event, ${query.id})" title="Query Info">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update active button
+            document.querySelectorAll('.query-type-btn').forEach(btn => {
+                btn.classList.toggle('bg-blue-500', btn.dataset.type === type);
+                btn.classList.toggle('text-white', btn.dataset.type === type);
+                btn.classList.toggle('bg-gray-100', btn.dataset.type !== type);
+            });
+
+            // Clear current query and results when switching types
+            clearQueryDisplay();
+        }
+
+        function clearQueryDisplay() {
+            currentQuery = null;
+            document.getElementById('currentQueryTitle').textContent = 'Select a Query';
+            document.getElementById('currentQuerySyntax').textContent = '';
+            document.getElementById('currentQueryDescription').textContent = '';
+            document.getElementById('executeBtn').classList.add('hidden');
+            document.getElementById('queryResult').textContent = '';
+            document.getElementById('resultCount').textContent = '';
+        }
+
+        function selectQuery(queryId) {
+            const query = [...HospitalDB.ALL_QUERIES, ...HospitalDB.UPDATE_OPERATIONS, ...HospitalDB.DELETE_OPERATIONS]
+                .find(q => q.id === queryId);
+            
+            if (!query) return;
+
+            currentQuery = query;
+            document.getElementById('currentQueryTitle').textContent = query.title;
+            document.getElementById('currentQuerySyntax').textContent = query.query;
+            document.getElementById('currentQueryDescription').textContent = query.description;
+            document.getElementById('executeBtn').classList.remove('hidden');
+
+            // Highlight selected query
+            document.querySelectorAll('.query-item').forEach(item => {
+                item.classList.toggle('bg-blue-50', item.querySelector('h3').textContent === query.title);
+            });
+        }
+
+        async function executeCurrentQuery() {
+            if (!currentQuery) return;
+
+            const resultsContainer = document.querySelector('.results-container');
+            if (!resultsContainer) return;
+
+            resultsContainer.classList.add('loading');
+            showLoading();
+            
+            try {
+                await new Promise(resolve => setTimeout(resolve, 800));
+                const result = currentQuery.execute(currentData);
+                
+                // Format and display results
+                document.getElementById('queryResult').innerHTML = formatJSON(result);
+                
+                // Update result count
+                const count = Array.isArray(result) ? result.length : 1;
+                document.getElementById('resultCount').innerHTML = `
+                    <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                    </svg>
+                    <span>${count} result${count !== 1 ? 's' : ''}</span>
+                `;
+
+                // Update display and show success message
+                updateDataDisplay();
+                showToast('Query executed successfully', 'success');
+            } catch (error) {
+                console.error('Query execution error:', error);
+                showToast('Error executing query', 'error');
+            } finally {
+                hideLoading();
+                resultsContainer.classList.remove('loading');
+            }
+        }
+
+        function toggleDataView() {
+            const modal = document.getElementById('dataModal');
+            modal.classList.toggle('hidden');
+            
+            // Update data display when showing modal
+            if (!modal.classList.contains('hidden')) {
+                updateDataDisplay();
+            }
+        }
+
+        // Reset data function
+        function resetData() {
+            currentData = {
+                patients: JSON.parse(JSON.stringify(HospitalDB.ORIGINAL_PATIENTS)),
+                doctors: JSON.parse(JSON.stringify(HospitalDB.ORIGINAL_DOCTORS))
+            };
+            updateDataDisplay();
+            clearQueryDisplay();
+            showToast('Data has been reset successfully');
+        }
+
+        // Update data display
+        function updateDataDisplay() {
+            document.getElementById('patientsData').innerHTML = formatJSON(currentData.patients);
+            document.getElementById('doctorsData').innerHTML = formatJSON(currentData.doctors);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('dataModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('dataModal')) {
+                toggleDataView();
+            }
+        });
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            createQueryList();
+            resetData();
+        });
+
+        // Enhanced loading state
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        // Enhanced toast notifications
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            const colors = {
+                success: 'text-green-500',
+                error: 'text-red-500',
+                warning: 'text-yellow-500'
+            };
+            
+            toast.className = `fixed bottom-4 right-4 glass-effect px-6 py-3 rounded-lg shadow-lg toast flex items-center`;
+            
+            const icon = type === 'success' ? `
+                <svg class="w-6 h-6 mr-2 ${colors[type]}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            ` : type === 'error' ? `
+                <svg class="w-6 h-6 mr-2 ${colors[type]}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            ` : `
+                <svg class="w-6 h-6 mr-2 ${colors[type]}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            `;
+            
+            toast.querySelector('div').innerHTML = icon + `<span class="text-gray-800">${message}</span>`;
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Add ripple effect to buttons with proper cleanup
+        document.querySelectorAll('.btn-effect').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Remove any existing ripples
+                const existingRipples = this.getElementsByClassName('ripple-effect');
+                Array.from(existingRipples).forEach(ripple => ripple.remove());
+
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple-effect absolute bg-white/30 rounded-full pointer-events-none';
+                
+                const rect = button.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height) * 2;
+                
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${e.clientX - rect.left - size/2}px`;
+                ripple.style.top = `${e.clientY - rect.top - size/2}px`;
+                
+                this.appendChild(ripple);
+                
+                ripple.addEventListener('animationend', () => ripple.remove());
+            });
+        });
+
+        // Update the JSON formatting function
+        function formatJSON(data) {
+            return JSON.stringify(data, null, 2)
+                .replace(/"(\w+)":/g, function(match, p1) {
+                    return `"<span class='keyword'>${p1}</span>":`;
+                })
+                .replace(/"([^"]+)"(?!:)/g, function(match, p1) {
+                    return `"<span class='string'>${p1}</span>"`;
+                })
+                .replace(/\b(\d+)\b/g, "<span class='number'>$1</span>")
+                .replace(/([{}\[\],])/g, "<span class='operator'>$1</span>");
+        }
+
+        // Filter queries based on search input
+        function filterQueries(searchTerm) {
+            const queries = document.querySelectorAll('.query-item');
+            searchTerm = searchTerm.toLowerCase();
+            
+            queries.forEach(query => {
+                const title = query.querySelector('h3').textContent.toLowerCase();
+                const description = query.querySelector('p').textContent.toLowerCase();
+                const shouldShow = title.includes(searchTerm) || description.includes(searchTerm);
+                
+                query.style.display = shouldShow ? 'block' : 'none';
+                if (shouldShow) {
+                    query.classList.add('animate-fade-in');
+                }
+            });
+        }
+
+        // Get query category based on ID
+        function getQueryCategory(id) {
+            if (id <= 10) return 'Find';
+            if (id <= 15) return 'Update';
+            return 'Delete';
+        }
+
+        // Get category class for styling
+        function getCategoryClass(id) {
+            if (id <= 10) return 'category-find';
+            if (id <= 15) return 'category-update';
+            return 'category-delete';
+        }
+
+        // Copy query to clipboard
+        function copyQuery(event, queryId) {
+            event.stopPropagation();
+            const query = [...HospitalDB.ALL_QUERIES, ...HospitalDB.UPDATE_OPERATIONS, ...HospitalDB.DELETE_OPERATIONS]
+                .find(q => q.id === queryId);
+            
+            if (query) {
+                navigator.clipboard.writeText(query.query);
+                showToast('Query copied to clipboard', 'success');
+            }
+        }
+
+        // Show query information modal
+        function showQueryInfo(event, queryId) {
+            event.stopPropagation();
+            const query = [...HospitalDB.ALL_QUERIES, ...HospitalDB.UPDATE_OPERATIONS, ...HospitalDB.DELETE_OPERATIONS]
+                .find(q => q.id === queryId);
+            
+            if (query) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center animate-fade-in';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 animate-scale-in">
+                        <h3 class="text-lg font-semibold mb-2">${query.title}</h3>
+                        <div class="mb-4">
+                            <span class="category-badge ${getCategoryClass(query.id)} mb-2">${getQueryCategory(query.id)}</span>
+                            <p class="text-gray-600">${query.description}</p>
+                        </div>
+                        <div class="bg-gray-50 rounded p-4 mb-4">
+                            <h4 class="text-sm font-semibold text-gray-600 mb-2">MongoDB Query:</h4>
+                            <pre class="text-sm bg-white p-2 rounded border">${query.query}</pre>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" 
+                            class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded transition-colors">
+                            Close
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
+            }
+        }
+    </script>
+</body>
+</html> 
