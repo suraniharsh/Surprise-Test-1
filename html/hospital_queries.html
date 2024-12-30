@@ -359,14 +359,55 @@
             }
         }
 
-        /* Code syntax highlighting */
+        /* Code syntax highlighting - Enhanced readability theme */
         .syntax-highlight {
-            color: #374151;
+            @apply bg-[#282c34] rounded-lg p-4 overflow-x-auto font-mono text-sm;
+            line-height: 1.2;
         }
-        .syntax-highlight .keyword { color: #7C3AED; }
-        .syntax-highlight .string { color: #059669; }
-        .syntax-highlight .number { color: #2563EB; }
-        .syntax-highlight .operator { color: #DC2626; }
+        /* Property names - Bright blue */
+        .syntax-highlight .key { 
+            color: #61afef;
+            font-weight: 500;
+        }
+        /* String values - Light green */
+        .syntax-highlight .string { 
+            color: #98c379;
+        }
+        /* Numbers - Light orange */
+        .syntax-highlight .number { 
+            color: #e5c07b;
+        }
+        /* Booleans - Pink */
+        .syntax-highlight .boolean { 
+            color: #c678dd;
+            font-weight: 500;
+        }
+        /* Null values - Pink */
+        .syntax-highlight .null { 
+            color: #c678dd;
+            font-weight: 500;
+        }
+        /* Operators (colons) - Gray */
+        .syntax-highlight .operator { 
+            color: #abb2bf;
+            margin: 0 0.2rem;
+        }
+        /* Brackets and braces - Light gray */
+        .syntax-highlight .bracket { 
+            color: #abb2bf;
+        }
+        /* Commas - Gray */
+        .syntax-highlight .comma { 
+            color: #abb2bf;
+            margin-right: 0.5rem;
+        }
+
+        /* Indentation spacing */
+        .pl-4 { padding-left: 2.5rem; }
+        .pl-8 { padding-left: 5rem; }
+        .pl-12 { padding-left: 7.5rem; }
+        .pl-16 { padding-left: 10rem; }
+        .pl-20 { padding-left: 12.5rem; }
 
         /* Add ripple animation style */
         .ripple-effect {
@@ -418,10 +459,18 @@
 
         /* Results animation */
         .results-container {
-            @apply transition-all duration-300;
+            @apply bg-[#1E1E1E] shadow-xl rounded-xl;
+            border: 1px solid #2D2D2D;
         }
-        .results-container.loading {
-            @apply opacity-50 pointer-events-none;
+        .results-container h2 {
+            @apply text-gray-200 mb-4;
+        }
+        #resultCount {
+            @apply text-gray-400;
+        }
+        #queryResults {
+            @apply bg-[#1E1E1E] rounded-lg;
+            border: 1px solid #2D2D2D;
         }
     </style>
 </head>
@@ -554,33 +603,9 @@
         let currentQuery = null;
 
         function createQueryList() {
-            const container = document.getElementById('queryList');
-            const createQueryItem = (query) => `
-                <div class="query-item p-4 hover:bg-gray-50 cursor-pointer" onclick="selectQuery(${query.id})">
-                    <h3 class="font-medium text-gray-800">${query.title}</h3>
-                    <p class="text-sm text-gray-500 mt-1">${query.description}</p>
-                </div>
-            `;
-
-            showQueryType('find');
-        }
-
-        function showQueryType(type) {
-            const container = document.getElementById('queryList');
-            let queries;
+            const container = document.querySelector('.query-sidebar .space-y-2');
+            const queries = [...HospitalDB.ALL_QUERIES, ...HospitalDB.UPDATE_OPERATIONS, ...HospitalDB.DELETE_OPERATIONS];
             
-            switch(type) {
-                case 'find':
-                    queries = HospitalDB.ALL_QUERIES;
-                    break;
-                case 'update':
-                    queries = HospitalDB.UPDATE_OPERATIONS;
-                    break;
-                case 'delete':
-                    queries = HospitalDB.DELETE_OPERATIONS;
-                    break;
-            }
-
             container.innerHTML = queries.map(query => `
                 <div class="query-item p-4 hover:bg-gray-50 cursor-pointer relative group" onclick="selectQuery(${query.id})">
                     <div class="absolute inset-y-0 left-0 w-1 bg-blue-500 transform scale-y-0 group-hover:scale-y-100 transition-transform duration-200"></div>
@@ -607,124 +632,124 @@
                     </div>
                 </div>
             `).join('');
-
-            // Update active button
-            document.querySelectorAll('.query-type-btn').forEach(btn => {
-                btn.classList.toggle('bg-blue-500', btn.dataset.type === type);
-                btn.classList.toggle('text-white', btn.dataset.type === type);
-                btn.classList.toggle('bg-gray-100', btn.dataset.type !== type);
-            });
-
-            // Clear current query and results when switching types
-            clearQueryDisplay();
-        }
-
-        function clearQueryDisplay() {
-            currentQuery = null;
-            document.getElementById('currentQueryTitle').textContent = 'Select a Query';
-            document.getElementById('currentQuerySyntax').textContent = '';
-            document.getElementById('currentQueryDescription').textContent = '';
-            document.getElementById('executeBtn').classList.add('hidden');
-            document.getElementById('queryResult').textContent = '';
-            document.getElementById('resultCount').textContent = '';
         }
 
         function selectQuery(queryId) {
-            const query = [...HospitalDB.ALL_QUERIES, ...HospitalDB.UPDATE_OPERATIONS, ...HospitalDB.DELETE_OPERATIONS]
-                .find(q => q.id === queryId);
+            const queries = [...HospitalDB.ALL_QUERIES, ...HospitalDB.UPDATE_OPERATIONS, ...HospitalDB.DELETE_OPERATIONS];
+            const query = queries.find(q => q.id === queryId);
             
             if (!query) return;
 
             currentQuery = query;
-            document.getElementById('currentQueryTitle').textContent = query.title;
-            document.getElementById('currentQuerySyntax').textContent = query.query;
-            document.getElementById('currentQueryDescription').textContent = query.description;
-            document.getElementById('executeBtn').classList.remove('hidden');
+            document.getElementById('currentQuery').innerHTML = formatJSON(query.query);
 
             // Highlight selected query
             document.querySelectorAll('.query-item').forEach(item => {
-                item.classList.toggle('bg-blue-50', item.querySelector('h3').textContent === query.title);
+                item.classList.toggle('selected', item.querySelector('h3').textContent === query.title);
             });
+
+            // Close mobile sidebar after selection
+            const sidebar = document.querySelector('.query-sidebar');
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+            }
+        }
+
+        function formatJSON(data) {
+            if (typeof data === 'string') return data;
+            
+            // Convert the data to a formatted string with proper indentation
+            const jsonString = JSON.stringify(data, null, 2);
+            
+            // Process the JSON string for formatting with enhanced readability
+            const formattedContent = jsonString
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                    let cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                            match = match.slice(0, -1);
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return `<span class="${cls}">${match}</span>${cls === 'key' ? '<span class="operator">:</span>' : ''}`;
+                })
+                .replace(/([{}\[\]])/g, match => `<span class="bracket">${match}</span>`)
+                .replace(/,/g, '<span class="comma">,</span>');
+
+            // Add proper indentation without extra spacing
+            const lines = formattedContent.split('\n');
+            const indentedLines = lines.map(line => {
+                const indent = line.match(/^\s*/)[0];
+                const content = line.trimLeft();
+                if (content) {
+                    return `<div class="pl-${indent.length * 4}" style="line-height: 1.2;">${content}</div>`;
+                }
+                return '';
+            }).filter(Boolean);
+
+            return `<div class="syntax-highlight" style="color: #abb2bf; line-height: 1.2;">${indentedLines.join('')}</div>`;
         }
 
         async function executeCurrentQuery() {
-            if (!currentQuery) return;
+            if (!currentQuery) {
+                showToast('Please select a query first', 'warning');
+                return;
+            }
 
             const resultsContainer = document.querySelector('.results-container');
             if (!resultsContainer) return;
 
-            resultsContainer.classList.add('loading');
             showLoading();
             
             try {
-                await new Promise(resolve => setTimeout(resolve, 800));
+                await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
                 const result = currentQuery.execute(currentData);
                 
                 // Format and display results
-                document.getElementById('queryResult').innerHTML = formatJSON(result);
+                document.getElementById('queryResults').innerHTML = formatJSON(result);
                 
                 // Update result count
                 const count = Array.isArray(result) ? result.length : 1;
-                document.getElementById('resultCount').innerHTML = `
-                    <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
-                    </svg>
-                    <span>${count} result${count !== 1 ? 's' : ''}</span>
-                `;
+                document.getElementById('resultCount').textContent = `${count} result${count !== 1 ? 's' : ''}`;
 
-                // Update display and show success message
-                updateDataDisplay();
                 showToast('Query executed successfully', 'success');
             } catch (error) {
                 console.error('Query execution error:', error);
                 showToast('Error executing query', 'error');
             } finally {
                 hideLoading();
-                resultsContainer.classList.remove('loading');
             }
         }
 
-        function toggleDataView() {
-            const modal = document.getElementById('dataModal');
-            modal.classList.toggle('hidden');
-            
-            // Update data display when showing modal
-            if (!modal.classList.contains('hidden')) {
-                updateDataDisplay();
-            }
-        }
-
-        // Reset data function
         function resetData() {
             currentData = {
                 patients: JSON.parse(JSON.stringify(HospitalDB.ORIGINAL_PATIENTS)),
                 doctors: JSON.parse(JSON.stringify(HospitalDB.ORIGINAL_DOCTORS))
             };
-            updateDataDisplay();
-            clearQueryDisplay();
-            showToast('Data has been reset successfully');
+            showToast('Data has been reset successfully', 'success');
         }
 
-        // Update data display
-        function updateDataDisplay() {
-            document.getElementById('patientsData').innerHTML = formatJSON(currentData.patients);
-            document.getElementById('doctorsData').innerHTML = formatJSON(currentData.doctors);
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('dataModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('dataModal')) {
-                toggleDataView();
+        function toggleDataView() {
+            const modal = document.getElementById('rawDataModal');
+            modal.classList.toggle('hidden');
+            
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('rawData').innerHTML = formatJSON({
+                    patients: currentData.patients,
+                    doctors: currentData.doctors
+                });
             }
-        });
+        }
 
-        // Initialize
-        window.addEventListener('DOMContentLoaded', () => {
-            createQueryList();
-            resetData();
-        });
-
-        // Enhanced loading state
         function showLoading() {
             document.getElementById('loadingOverlay').classList.remove('hidden');
         }
@@ -733,40 +758,31 @@
             document.getElementById('loadingOverlay').classList.add('hidden');
         }
 
-        // Enhanced toast notifications
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
+            const toastContent = toast.querySelector('.toast');
             
-            const colors = {
-                success: 'text-green-500',
-                error: 'text-red-500',
-                warning: 'text-yellow-500'
+            const bgColors = {
+                success: 'bg-green-50 text-green-800',
+                error: 'bg-red-50 text-red-800',
+                warning: 'bg-yellow-50 text-yellow-800'
             };
             
-            toast.className = `fixed bottom-4 right-4 glass-effect px-6 py-3 rounded-lg shadow-lg toast flex items-center`;
+            toastContent.className = `toast glass-effect px-4 py-3 rounded-lg text-sm font-medium shadow-lg ${bgColors[type]}`;
+            toastContent.textContent = message;
             
-            const icon = type === 'success' ? `
-                <svg class="w-6 h-6 mr-2 ${colors[type]}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-            ` : type === 'error' ? `
-                <svg class="w-6 h-6 mr-2 ${colors[type]}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            ` : `
-                <svg class="w-6 h-6 mr-2 ${colors[type]}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-            `;
-            
-            toast.querySelector('div').innerHTML = icon + `<span class="text-gray-800">${message}</span>`;
             toast.classList.remove('hidden');
             
             setTimeout(() => {
                 toast.classList.add('hidden');
             }, 3000);
         }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            createQueryList();
+            resetData();
+        });
 
         // Add ripple effect to buttons with proper cleanup
         document.querySelectorAll('.btn-effect').forEach(button => {
@@ -790,19 +806,6 @@
                 ripple.addEventListener('animationend', () => ripple.remove());
             });
         });
-
-        // Update the JSON formatting function
-        function formatJSON(data) {
-            return JSON.stringify(data, null, 2)
-                .replace(/"(\w+)":/g, function(match, p1) {
-                    return `"<span class='keyword'>${p1}</span>":`;
-                })
-                .replace(/"([^"]+)"(?!:)/g, function(match, p1) {
-                    return `"<span class='string'>${p1}</span>"`;
-                })
-                .replace(/\b(\d+)\b/g, "<span class='number'>$1</span>")
-                .replace(/([{}\[\],])/g, "<span class='operator'>$1</span>");
-        }
 
         // Filter queries based on search input
         function filterQueries(searchTerm) {
